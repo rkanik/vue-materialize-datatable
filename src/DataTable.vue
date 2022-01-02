@@ -1,31 +1,40 @@
 <template>
-	<div class="card material-table" ref="table">
+	<div
+		class="card material-table"
+		ref="table"
+	>
 		<div class="table-header">
 			<span class="table-title">{{ title }}</span>
 			<div class="actions">
-				<a v-for="(button, index) in customButtons" v-if="button.hide ? !button.hide : true"
-					:key="index"
-					href="javascript:undefined"
-					class="waves-effect btn-flat nopadding"
-					@click="button.onclick"
-				>
-					<i class="material-icons">{{ button.icon }}</i>
-				</a>
-				<a v-if="printable"
+				<template v-for="(button, index) in customButtons">
+					<a
+						v-if="button.hide ? !button.hide : true"
+						:key="index"
+						href="javascript:undefined"
+						class="waves-effect btn-flat nopadding"
+						@click="button.onclick"
+					>
+						<i class="material-icons">{{ button.icon }}</i>
+					</a>
+				</template>
+				<a
+					v-if="printable"
 					href="javascript:undefined"
 					class="waves-effect btn-flat nopadding"
 					@click="print"
 				>
 					<i class="material-icons">print</i>
 				</a>
-				<a v-if="exportable"
+				<a
+					v-if="exportable"
 					href="javascript:undefined"
 					class="waves-effect btn-flat nopadding"
 					@click="exportExcel"
 				>
 					<i class="material-icons">description</i>
 				</a>
-				<a v-if="searchable"
+				<a
+					v-if="searchable"
 					href="javascript:undefined"
 					class="waves-effect btn-flat nopadding"
 					@click="search"
@@ -37,7 +46,11 @@
 		<div v-if="searching">
 			<div id="search-input-container">
 				<label>
-					<input id="search-input" type="search" class="form-control" :placeholder="lang['search_data']"
+					<input
+						id="search-input"
+						type="search"
+						class="form-control"
+						:placeholder="lang['search_data']"
 						v-model="searchInput"
 					>
 				</label>
@@ -46,7 +59,8 @@
 		<table ref="table">
 			<thead>
 				<tr>
-					<th v-for="(column, index) in columns"
+					<th
+						v-for="(column, index) in columns"
 						:key="index"
 						:class="(sortable ? 'sorting ' : '')
 							+ (sortColumn === index ?
@@ -63,41 +77,70 @@
 			</thead>
 
 			<tbody>
-				<tr v-for="(row, index) in paginated"
+				<tr
+					v-for="(row, index) in paginated"
 					:key="index"
 					:class="{ clickable : clickable }"
 					@click="click(row)"
 				>
-					<td v-for="(column, columnIndex) in columns"
+					<td
+						v-for="(column, columnIndex) in columns"
 						:key="columnIndex"
 						:class="{ numeric : column.numeric }"
 					>
-						<div v-if="!column.html">
-							{{ collect(row, column.field) }}
-						</div>
-						<div v-if="column.html" v-html="collect(row, column.field)" />
+						<slot
+							:name="`item.${column.field}`"
+							:item="row"
+							:itemIndex="index"
+							:header="column"
+							:headerIndex="columnIndex"
+						>
+							<div v-if="!column.html">
+								{{ collect(row, column.field) }}
+							</div>
+							<div
+								v-if="column.html"
+								v-html="collect(row, column.field)"
+							/>
+						</slot>
 					</td>
-					<slot name="tbody-tr" :row="row" />
+					<slot
+						name="tbody-tr"
+						:row="row"
+					/>
 				</tr>
 
 				<template v-if="rows.length === 0 && loadingAnimation === true">
-					<tr v-for="n in (currentPerPage === -1 ? 10 : currentPerPage)"
+					<tr
+						v-for="n in (currentPerPage === -1 ? 10 : currentPerPage)"
 						:key="n"
 					>
 						<td :colspan="columns.length">
-							<tb-skeleton :height="15" theme="opacity" bg-color="#dcdbdc" shape="radius" />
+							<tb-skeleton
+								:height="15"
+								theme="opacity"
+								bg-color="#dcdbdc"
+								shape="radius"
+							/>
 						</td>
 					</tr>
 				</template>
 			</tbody>
 		</table>
 
-		<div v-if="paginate" class="table-footer">
+		<div
+			v-if="paginate"
+			class="table-footer"
+		>
 			<div :class="{'datatable-length': true, 'rtl': lang.__is_rtl}">
 				<label>
 					<span>{{ lang['rows_per_page'] }}:</span>
-					<select class="browser-default" @change="onTableLength">
-						<option v-for="(option, index) in perPageOptions"
+					<select
+						class="browser-default"
+						@change="onTableLength"
+					>
+						<option
+							v-for="(option, index) in perPageOptions"
 							:key="index"
 							:value="option"
 							:selected="option == currentPerPage"
@@ -121,7 +164,8 @@
 			<div>
 				<ul class="material-pagination">
 					<li>
-						<a href="javascript:undefined"
+						<a
+							href="javascript:undefined"
 							class="waves-effect btn-flat"
 							tabindex="0"
 							@click.prevent="previousPage"
@@ -130,7 +174,8 @@
 						</a>
 					</li>
 					<li>
-						<a href="javascript:undefined"
+						<a
+							href="javascript:undefined"
 							class="waves-effect btn-flat"
 							tabindex="0"
 							@click.prevent="nextPage"
@@ -145,425 +190,425 @@
 </template>
 
 <script>
-	import 'tb-skeleton/dist/skeleton.css';
+import 'tb-skeleton/dist/skeleton.css';
 
-	import Fuse from 'fuse.js';
-	import locales from './locales';
-	import { TbSkeleton } from 'tb-skeleton';
+import Fuse from 'fuse.js';
+import locales from './locales';
+import { TbSkeleton } from 'tb-skeleton';
 
-	export default {
-		components: {
-			TbSkeleton,
+export default {
+	components: {
+		TbSkeleton,
+	},
+
+	props: {
+		title: {
+			type: String,
+			required: true,
 		},
 
-		props: {
-			title: {
-				type: String,
-				required: true,
-			},
-
-			columns: {
-				type: Array,
-				required: true,
-			},
-
-			rows: {
-				type: Array,
-				required: true,
-			},
-
-			clickable: {
-				type: Boolean,
-				required: false,
-				default: true,
-			},
-
-			customButtons: {
-				type: Array,
-				required: false,
-				default: () => [],
-			},
-
-			perPage: {
-				type: Array,
-				required: false,
-				default: () => [10, 20, 30, 40, 50],
-			},
-
-			defaultPerPage: {
-				type: Number,
-				required: false,
-				default: null,
-			},
-
-			sortable: {
-				type: Boolean,
-				required: false,
-				default: true,
-			},
-
-			searchable: {
-				type: Boolean,
-				required: false,
-				default: true,
-			},
-
-			exactSearch: {
-				type: Boolean,
-				required: false,
-				default: false,
-			},
-
-			serverSearch: {
-				type: Boolean,
-				required: false,
-				default: false,
-			},
-
-			serverSearchFunc: {
-				type: Function,
-				required: false,
-				default: () => {},
-			},
-
-			paginate: {
-				type: Boolean,
-				required: false,
-				default: true,
-			},
-
-			exportable: {
-				type: Boolean,
-				required: false,
-				default: true,
-			},
-
-			printable: {
-				type: Boolean,
-				required: false,
-				default: true,
-			},
-
-			locale: {
-				type: String,
-				required: false,
-				default: 'en',
-			},
-
-			initSortCol: {
-				type: Number,
-				required: false,
-				default: -1,
-			},
-
-			loadingAnimation: {
-				type: Boolean,
-				required: false,
-				default: true,
-			},
-
+		columns: {
+			type: Array,
+			required: true,
 		},
 
-		data: () => ({
-			currentPage: 1,
-			currentPerPage: 10,
-			sortColumn: -1,
-			sortType: 'asc',
-			searching: false,
-			searchInput: '',
-		}),
+		rows: {
+			type: Array,
+			required: true,
+		},
 
-		methods: {
-			nextPage() {
-				if (this.processedRows.length > this.currentPerPage * this.currentPage)
-					++this.currentPage;
-			},
+		clickable: {
+			type: Boolean,
+			required: false,
+			default: true,
+		},
 
-			previousPage() {
-				if (this.currentPage > 1)
-					--this.currentPage;
-			},
+		customButtons: {
+			type: Array,
+			required: false,
+			default: () => [],
+		},
 
-			onTableLength(e) {
-				this.currentPerPage = parseInt(e.target.value);
-			},
+		perPage: {
+			type: Array,
+			required: false,
+			default: () => [10, 20, 30, 40, 50],
+		},
 
-			sort(index) {
-				if (!this.sortable)
-					return;
-				if (this.sortColumn === index) {
-					this.sortType = this.sortType === 'asc' ? 'desc' : 'asc';
-				} else {
-					this.sortType = 'asc';
-					this.sortColumn = index;
-				}
-			},
+		defaultPerPage: {
+			type: Number,
+			required: false,
+			default: null,
+		},
 
-			search(e) {
-				this.searching = !this.searching;
-			},
+		sortable: {
+			type: Boolean,
+			required: false,
+			default: true,
+		},
 
-			click(row) {
-				if(!this.clickable){
-					return;
-				}
+		searchable: {
+			type: Boolean,
+			required: false,
+			default: true,
+		},
 
-				if(getSelection().toString()){
-					// Return if some text is selected instead of firing the row-click event.
-					return;
-				}
+		exactSearch: {
+			type: Boolean,
+			required: false,
+			default: false,
+		},
 
-				this.$emit('row-click', row);
-			},
+		serverSearch: {
+			type: Boolean,
+			required: false,
+			default: false,
+		},
 
-			exportExcel() {
-				const mimeType = 'data:application/vnd.ms-excel';
-				const html = this.renderTable().replace(/ /g, '%20');
+		serverSearchFunc: {
+			type: Function,
+			required: false,
+			default: () => { },
+		},
 
-				// eslint-disable-next-line eqeqeq
-				const documentPrefix = this.title != '' ? this.title.replace(/ /g, '-') : 'Sheet';
-				const d = new Date();
+		paginate: {
+			type: Boolean,
+			required: false,
+			default: true,
+		},
 
-				const dummy = document.createElement('a');
-				dummy.href = mimeType + ', ' + html;
-				dummy.download = documentPrefix
-					+ '-' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
-					+ '-' + d.getHours() + '-' + d.getMinutes() + '-' + d.getSeconds()
-					+ '.xls';
-				document.body.appendChild(dummy);
-				dummy.click();
-			},
+		exportable: {
+			type: Boolean,
+			required: false,
+			default: true,
+		},
 
-			print() {
-				const clonedTable = this.$refs.table.cloneNode(true);
-				this.synchronizeCssStyles(this.$refs.table, clonedTable, true);
+		printable: {
+			type: Boolean,
+			required: false,
+			default: true,
+		},
 
-				clonedTable.style.maxWidth = '100%';
-				clonedTable.style.boxShadow = '0px 0px 0px 1px rgba(0,0,0,0.2)';
-				clonedTable.style.margin = '8px auto';
-				clonedTable.querySelector('.actions').remove();
-				clonedTable.querySelector('.material-pagination').remove();
-				clonedTable.querySelector('.datatable-length').remove();
+		locale: {
+			type: String,
+			required: false,
+			default: 'en',
+		},
 
-				clonedTable.querySelectorAll('button').forEach(n => n.remove());
+		initSortCol: {
+			type: Number,
+			required: false,
+			default: -1,
+		},
 
-				let win = window.open('', '');
+		loadingAnimation: {
+			type: Boolean,
+			required: false,
+			default: true,
+		},
+
+	},
+
+	data: () => ({
+		currentPage: 1,
+		currentPerPage: 10,
+		sortColumn: -1,
+		sortType: 'asc',
+		searching: false,
+		searchInput: '',
+	}),
+
+	methods: {
+		nextPage() {
+			if (this.processedRows.length > this.currentPerPage * this.currentPage)
+				++this.currentPage;
+		},
+
+		previousPage() {
+			if (this.currentPage > 1)
+				--this.currentPage;
+		},
+
+		onTableLength(e) {
+			this.currentPerPage = parseInt(e.target.value);
+		},
+
+		sort(index) {
+			if (!this.sortable)
+				return;
+			if (this.sortColumn === index) {
+				this.sortType = this.sortType === 'asc' ? 'desc' : 'asc';
+			} else {
+				this.sortType = 'asc';
+				this.sortColumn = index;
+			}
+		},
+
+		search(e) {
+			this.searching = !this.searching;
+		},
+
+		click(row) {
+			if (!this.clickable) {
+				return;
+			}
+
+			if (getSelection().toString()) {
+				// Return if some text is selected instead of firing the row-click event.
+				return;
+			}
+
+			this.$emit('row-click', row);
+		},
+
+		exportExcel() {
+			const mimeType = 'data:application/vnd.ms-excel';
+			const html = this.renderTable().replace(/ /g, '%20');
+
+			// eslint-disable-next-line eqeqeq
+			const documentPrefix = this.title != '' ? this.title.replace(/ /g, '-') : 'Sheet';
+			const d = new Date();
+
+			const dummy = document.createElement('a');
+			dummy.href = mimeType + ', ' + html;
+			dummy.download = documentPrefix
+				+ '-' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
+				+ '-' + d.getHours() + '-' + d.getMinutes() + '-' + d.getSeconds()
+				+ '.xls';
+			document.body.appendChild(dummy);
+			dummy.click();
+		},
+
+		print() {
+			const clonedTable = this.$refs.table.cloneNode(true);
+			this.synchronizeCssStyles(this.$refs.table, clonedTable, true);
+
+			clonedTable.style.maxWidth = '100%';
+			clonedTable.style.boxShadow = '0px 0px 0px 1px rgba(0,0,0,0.2)';
+			clonedTable.style.margin = '8px auto';
+			clonedTable.querySelector('.actions').remove();
+			clonedTable.querySelector('.material-pagination').remove();
+			clonedTable.querySelector('.datatable-length').remove();
+
+			clonedTable.querySelectorAll('button').forEach(n => n.remove());
+
+			let win = window.open('', '');
 
 
-				win.document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif';
-				win.document.body.innerHTML = (clonedTable.outerHTML);
+			win.document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif';
+			win.document.body.innerHTML = (clonedTable.outerHTML);
 
-				win.print();
+			win.print();
 
-				win.close();
-			},
+			win.close();
+		},
 
-			renderTable() {
-				let table = '<table><thead>';
+		renderTable() {
+			let table = '<table><thead>';
 
+			table += '<tr>';
+			for (let i = 0; i < this.columns.length; i++) {
+				const column = this.columns[i];
+				table += '<th>';
+				table += column.label;
+				table += '</th>';
+			}
+			table += '</tr>';
+
+			table += '</thead><tbody>';
+
+			for (let i = 0; i < this.rows.length; i++) {
+				const row = this.rows[i];
 				table += '<tr>';
-				for (let i = 0; i < this.columns.length; i++) {
-					const column = this.columns[i];
-					table += '<th>';
-					table += 	column.label;
-					table += '</th>';
+				for (let j = 0; j < this.columns.length; j++) {
+					const column = this.columns[j];
+					table += '<td>';
+					table += this.collect(row, column.field);
+					table += '</td>';
 				}
 				table += '</tr>';
+			}
 
-				table += '</thead><tbody>';
+			table += '</tbody></table>';
 
-				for (let i = 0; i < this.rows.length; i++) {
-					const row = this.rows[i];
-					table += '<tr>';
-					for (let j = 0; j < this.columns.length; j++) {
-						const column = this.columns[j];
-						table += '<td>';
-						table +=	this.collect(row, column.field);
-						table += '</td>';
-					}
-					table += '</tr>';
-				}
+			return table;
+		},
 
-				table += '</tbody></table>';
+		dig(obj, selector) {
+			let result = obj;
+			const splitter = selector.split('.');
 
-				return table;
-			},
-
-			dig(obj, selector) {
-				let result = obj;
-				const splitter = selector.split('.');
-
-				for (let i = 0; i < splitter.length; i++) {
-					if (result == undefined)
-						return undefined;
-
-					result = result[splitter[i]];
-				}
-
-				return result;
-			},
-
-			collect(obj, field) {
-				if (typeof(field) === 'function')
-					return field(obj);
-				else if (typeof(field) === 'string')
-					return this.dig(obj, field);
-				else
+			for (let i = 0; i < splitter.length; i++) {
+				if (result == undefined)
 					return undefined;
-			},
 
-			/* https://codebottle.io/s/31b70f5391
-			 *
-			 * @author: Luigi D'Amico (www.8bitplatoon.com)
-			 */
-			synchronizeCssStyles(src, destination, recursively) {
-				destination.style.cssText = this.getComputedStyleCssText(src);
+				result = result[splitter[i]];
+			}
 
-				if (recursively) {
-					const vSrcElements = src.getElementsByTagName('*');
-					const vDstElements = destination.getElementsByTagName('*');
-
-					for (var i = vSrcElements.length; i--;) {
-						const vSrcElement = vSrcElements[i];
-						const vDstElement = vDstElements[i];
-						vDstElement.style.cssText = this.getComputedStyleCssText(vSrcElement);
-					}
-				}
-			},
-
-			// https://gist.github.com/johnkpaul/1754808
-			//
-			// Please delete Firefox.
-			getComputedStyleCssText(element) {
-				const cssObject = window.getComputedStyle(element);
-				const cssAccumulator = [];
-
-				if (cssObject.cssText !== ''){
-					return cssObject.cssText;
-				}
-
-				for (let prop in cssObject){
-					if (typeof cssObject[prop] === 'string'){
-						cssAccumulator.push(prop + ' : ' + cssObject[prop]);
-					}
-				}
-
-				return cssAccumulator.join('; ');
-			},
+			return result;
 		},
 
-		watch: {
-			perPageOptions(newOptions, oldOptions) {
-				// If defaultPerPage is provided and it's a valid option, set as current per page
-				if (newOptions.indexOf(this.defaultPerPage) > -1) {
-					this.currentPerPage = parseInt(this.defaultPerPage);
-				} else {
-					// Set current page to first value
-					this.currentPerPage = newOptions[0];
-				}
-			},
-
-			searchInput(newSearchInput) {
-				if (this.searching && this.serverSearch && this.serverSearchFunc)
-					this.serverSearchFunc(newSearchInput);
-			},
-
-			rows(newRows, oldRows) {
-				// If the number of rows change, reset the currentPage to 1
-				if(newRows !== oldRows)
-					this.currentPage = 1;
-			},
+		collect(obj, field) {
+			if (typeof (field) === 'function')
+				return field(obj);
+			else if (typeof (field) === 'string')
+				return this.dig(obj, field);
+			else
+				return undefined;
 		},
 
-		computed: {
-			perPageOptions() {
-				let options = (Array.isArray(this.perPage) && this.perPage) || [10, 20, 30, 40, 50];
+		/* https://codebottle.io/s/31b70f5391
+		 *
+		 * @author: Luigi D'Amico (www.8bitplatoon.com)
+		 */
+		synchronizeCssStyles(src, destination, recursively) {
+			destination.style.cssText = this.getComputedStyleCssText(src);
 
-				// Force numbers
-				options = options.map(v => parseInt(v));
+			if (recursively) {
+				const vSrcElements = src.getElementsByTagName('*');
+				const vDstElements = destination.getElementsByTagName('*');
+
+				for (var i = vSrcElements.length; i--;) {
+					const vSrcElement = vSrcElements[i];
+					const vDstElement = vDstElements[i];
+					vDstElement.style.cssText = this.getComputedStyleCssText(vSrcElement);
+				}
+			}
+		},
+
+		// https://gist.github.com/johnkpaul/1754808
+		//
+		// Please delete Firefox.
+		getComputedStyleCssText(element) {
+			const cssObject = window.getComputedStyle(element);
+			const cssAccumulator = [];
+
+			if (cssObject.cssText !== '') {
+				return cssObject.cssText;
+			}
+
+			for (let prop in cssObject) {
+				if (typeof cssObject[prop] === 'string') {
+					cssAccumulator.push(prop + ' : ' + cssObject[prop]);
+				}
+			}
+
+			return cssAccumulator.join('; ');
+		},
+	},
+
+	watch: {
+		perPageOptions(newOptions, oldOptions) {
+			// If defaultPerPage is provided and it's a valid option, set as current per page
+			if (newOptions.indexOf(this.defaultPerPage) > -1) {
+				this.currentPerPage = parseInt(this.defaultPerPage);
+			} else {
+				// Set current page to first value
+				this.currentPerPage = newOptions[0];
+			}
+		},
+
+		searchInput(newSearchInput) {
+			if (this.searching && this.serverSearch && this.serverSearchFunc)
+				this.serverSearchFunc(newSearchInput);
+		},
+
+		rows(newRows, oldRows) {
+			// If the number of rows change, reset the currentPage to 1
+			if (newRows !== oldRows)
+				this.currentPage = 1;
+		},
+	},
+
+	computed: {
+		perPageOptions() {
+			let options = (Array.isArray(this.perPage) && this.perPage) || [10, 20, 30, 40, 50];
+
+			// Force numbers
+			options = options.map(v => parseInt(v));
 
 
-				// Sort options
-				options.sort((a,b) => a - b);
+			// Sort options
+			options.sort((a, b) => a - b);
 
-				// And add "All"
-				options.push(-1);
+			// And add "All"
+			options.push(-1);
 
 
-				return options;
-			},
+			return options;
+		},
 
-			processedRows() {
-				let computedRows = this.rows;
+		processedRows() {
+			let computedRows = this.rows;
 
-				if (this.sortable !== false)
-					computedRows = computedRows.sort((x,y) => {
-						if (!this.columns[this.sortColumn])
-							return 0;
+			if (this.sortable !== false)
+				computedRows = computedRows.sort((x, y) => {
+					if (!this.columns[this.sortColumn])
+						return 0;
 
-						const cook = x => {
-							x = this.collect(x, this.columns[this.sortColumn].field);
-							if (typeof(x) === 'string') {
-								x = x.toLowerCase();
-								if (this.columns[this.sortColumn].numeric)
-									x = x.indexOf('.') >= 0 ? parseFloat(x) : parseInt(x);
-							}
-							return x;
-						};
-
-						x = cook(x);
-						y = cook(y);
-
-						return (x < y ? -1 : (x > y ? 1 : 0)) * (this.sortType === 'desc' ? -1 : 1);
-					});
-
-				if (this.searching && !this.serverSearch && this.searchInput) {
-					const searchConfig = { keys: this.columns.map(c => c.field) };
-
-					// Enable searching of numbers (non-string)
-					// Temporary fix of https://github.com/krisk/Fuse/issues/144
-					searchConfig.getFn = (obj, path) => {
-						const property = this.dig(obj, path);
-						if(Number.isInteger(property))
-							return JSON.stringify(property);
-						return property;
+					const cook = x => {
+						x = this.collect(x, this.columns[this.sortColumn].field);
+						if (typeof (x) === 'string') {
+							x = x.toLowerCase();
+							if (this.columns[this.sortColumn].numeric)
+								x = x.indexOf('.') >= 0 ? parseFloat(x) : parseInt(x);
+						}
+						return x;
 					};
 
-					if (this.exactSearch) {
-						//return only exact matches
-						searchConfig.threshold = 0,
-						searchConfig.distance = 0;
-					}
+					x = cook(x);
+					y = cook(y);
 
-					computedRows = (new Fuse(computedRows, searchConfig)).search(this.searchInput);
+					return (x < y ? -1 : (x > y ? 1 : 0)) * (this.sortType === 'desc' ? -1 : 1);
+				});
+
+			if (this.searching && !this.serverSearch && this.searchInput) {
+				const searchConfig = { keys: this.columns.map(c => c.field) };
+
+				// Enable searching of numbers (non-string)
+				// Temporary fix of https://github.com/krisk/Fuse/issues/144
+				searchConfig.getFn = (obj, path) => {
+					const property = this.dig(obj, path);
+					if (Number.isInteger(property))
+						return JSON.stringify(property);
+					return property;
+				};
+
+				if (this.exactSearch) {
+					//return only exact matches
+					searchConfig.threshold = 0,
+						searchConfig.distance = 0;
 				}
 
-				return computedRows;
-			},
+				computedRows = (new Fuse(computedRows, searchConfig)).search(this.searchInput);
+			}
 
-			paginated() {
-				let paginatedRows = this.processedRows;
-
-				if (this.paginate && this.currentPerPage !== -1)
-					paginatedRows = paginatedRows.slice(
-						(this.currentPage - 1) * this.currentPerPage,
-						this.currentPerPage === -1 ? paginatedRows.length + 1 : this.currentPage * this.currentPerPage
-					);
-
-				return paginatedRows;
-			},
-
-			lang() {
-				return this.locale in locales ? locales[this.locale] : locales['en'];
-			},
+			return computedRows;
 		},
 
-		mounted() {
-			if (!(this.locale in locales))
-				console.error(`vue-materialize-datable: Invalid locale '${this.locale}'`);
-			this.sortColumn = this.initSortCol;
+		paginated() {
+			let paginatedRows = this.processedRows;
+
+			if (this.paginate && this.currentPerPage !== -1)
+				paginatedRows = paginatedRows.slice(
+					(this.currentPage - 1) * this.currentPerPage,
+					this.currentPerPage === -1 ? paginatedRows.length + 1 : this.currentPage * this.currentPerPage
+				);
+
+			return paginatedRows;
 		},
-	};
+
+		lang() {
+			return this.locale in locales ? locales[this.locale] : locales['en'];
+		},
+	},
+
+	mounted() {
+		if (!(this.locale in locales))
+			console.error(`vue-materialize-datable: Invalid locale '${this.locale}'`);
+		this.sortColumn = this.initSortCol;
+	},
+};
 </script>
 
 <style scoped>
@@ -579,12 +624,12 @@
 		margin: 0;
 		border: transparent 0 !important;
 		height: 48px;
-		color: rgba(0, 0, 0, .84);
+		color: rgba(0, 0, 0, 0.84);
 	}
 
 	#search-input-container {
 		padding: 0 14px 0 24px;
-		border-bottom: solid 1px #DDDDDD;
+		border-bottom: solid 1px #dddddd;
 	}
 
 	table {
@@ -600,7 +645,7 @@
 		align-items: center;
 		display: flex;
 		-webkit-display: flex;
-		border-bottom: solid 1px #DDDDDD;
+		border-bottom: solid 1px #dddddd;
 	}
 
 	.table-header .actions {
@@ -609,8 +654,8 @@
 	}
 
 	.table-header .btn-flat {
-			min-width: 36px;
-			padding: 0 8px;
+		min-width: 36px;
+		padding: 0 8px;
 	}
 
 	.table-header input {
@@ -723,13 +768,14 @@
 		height: 48px;
 		font-size: 13px;
 		color: rgba(0, 0, 0, 0.87);
-		border-bottom: solid 1px #DDDDDD;
+		border-bottom: solid 1px #dddddd;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
 
-	table td, table th {
+	table td,
+	table th {
 		border-radius: 0;
 	}
 
@@ -774,7 +820,7 @@
 
 	table th.sorting:after,
 	table th.sorting-asc:after {
-		font-family: 'Material Icons';
+		font-family: "Material Icons";
 		font-weight: normal;
 		font-style: normal;
 		font-size: 16px;
@@ -783,7 +829,7 @@
 		text-transform: none;
 		display: inline-block;
 		word-wrap: normal;
-		-webkit-font-feature-settings: 'liga';
+		-webkit-font-feature-settings: "liga";
 		-webkit-font-smoothing: antialiased;
 		content: "arrow_back";
 		-webkit-transform: rotate(90deg);
@@ -802,7 +848,7 @@
 	}
 
 	table tbody tr:hover {
-		background-color: #EEE;
+		background-color: #eee;
 	}
 
 	table th:last-child,
@@ -810,7 +856,8 @@
 		padding-right: 14px;
 	}
 
-	table th:first-child, table td:first-child {
+	table th:first-child,
+	table td:first-child {
 		padding-left: 24px;
 	}
 
