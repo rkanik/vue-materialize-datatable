@@ -1,6 +1,6 @@
 {
 	"name": "vue2-matable",
-	"version": "1.0.4",
+	"version": "1.0.8",
 	"description": "Datatable for VueJS with Materialize",
 	"author": "Yousef Sultan <yousef.su.2000@gmail.com>",
 	"private": false,

@@ -1,8 +1,5 @@
 <template>
-	<div
-		class="card material-table"
-		ref="table"
-	>
+	<div class="card material-table" ref="table">
 		<div class="table-header">
 			<span class="table-title">{{ title }}</span>
 			<div class="actions">
@@ -52,7 +49,7 @@
 						class="form-control"
 						:placeholder="lang['search_data']"
 						v-model="searchInput"
-					>
+					/>
 				</label>
 			</div>
 		</div>
@@ -69,9 +66,7 @@
 							+ (column.numeric ? ' numeric' : '')"
 						:style="{width: column.width ? column.width : 'auto'}"
 						@click="sort(index)"
-					>
-						{{ column.label }}
-					</th>
+					>{{ column.label }}</th>
 					<slot name="thead-tr" />
 				</tr>
 			</thead>
@@ -95,71 +90,44 @@
 							:header="column"
 							:headerIndex="columnIndex"
 						>
-							<div v-if="!column.html">
-								{{ collect(row, column.field) }}
-							</div>
-							<div
-								v-if="column.html"
-								v-html="collect(row, column.field)"
-							/>
+							<div v-if="!column.html">{{ collect(row, column.field) }}</div>
+							<div v-if="column.html" v-html="collect(row, column.field)" />
 						</slot>
 					</td>
-					<slot
-						name="tbody-tr"
-						:row="row"
-					/>
+					<slot name="tbody-tr" :row="row" />
 				</tr>
 
 				<template v-if="rows.length === 0 && loadingAnimation === true">
-					<tr
-						v-for="n in (currentPerPage === -1 ? 10 : currentPerPage)"
-						:key="n"
-					>
+					<tr v-for="n in (currentPerPage === -1 ? 10 : currentPerPage)" :key="n">
 						<td :colspan="columns.length">
-							<tb-skeleton
-								:height="15"
-								theme="opacity"
-								bg-color="#dcdbdc"
-								shape="radius"
-							/>
+							<tb-skeleton :height="15" theme="opacity" bg-color="#dcdbdc" shape="radius" />
 						</td>
 					</tr>
 				</template>
 			</tbody>
 		</table>
 
-		<div
-			v-if="paginate"
-			class="table-footer"
-		>
+		<div v-if="paginate" class="table-footer">
 			<div :class="{'datatable-length': true, 'rtl': lang.__is_rtl}">
 				<label>
 					<span>{{ lang['rows_per_page'] }}:</span>
-					<select
-						class="browser-default"
-						@change="onTableLength"
-					>
+					<select class="browser-default" @change="onTableLength">
 						<option
 							v-for="(option, index) in perPageOptions"
 							:key="index"
 							:value="option"
 							:selected="option == currentPerPage"
-						>
-							{{ option === -1 ? lang['all'] : option }}
-						</option>
+						>{{ option === -1 ? lang['all'] : option }}</option>
 					</select>
 				</label>
 			</div>
 			<div :class="{'datatable-info': true, 'rtl': lang.__is_rtl}">
-				<span>{{ (currentPage - 1) * currentPerPage ? (currentPage - 1) * currentPerPage : 1 }}
+				<span>
+					{{ (currentPage - 1) * currentPerPage ? (currentPage - 1) * currentPerPage : 1 }}
 					-{{ Math.min(processedRows.length, currentPerPage * currentPage) }}
 				</span>
-				<span>
-					{{ lang['out_of_pages'] }}
-				</span>
-				<span>
-					{{ processedRows.length }}
-				</span>
+				<span>{{ lang['out_of_pages'] }}</span>
+				<span>{{ processedRows.length }}</span>
 			</div>
 			<div>
 				<ul class="material-pagination">
@@ -206,7 +174,10 @@ export default {
 			type: String,
 			required: true,
 		},
-
+		exportType: {
+			type: String,
+			default: 'columns'
+		},
 		columns: {
 			type: Array,
 			required: true,
@@ -407,8 +378,8 @@ export default {
 			let table = '<table><thead>';
 
 			table += '<tr>';
-			for (let i = 0; i < this.columns.length; i++) {
-				const column = this.columns[i];
+			for (let i = 0; i < this.exportColumns.length; i++) {
+				const column = this.exportColumns[i];
 				table += '<th>';
 				table += column.label;
 				table += '</th>';
@@ -420,10 +391,13 @@ export default {
 			for (let i = 0; i < this.rows.length; i++) {
 				const row = this.rows[i];
 				table += '<tr>';
-				for (let j = 0; j < this.columns.length; j++) {
-					const column = this.columns[j];
+				for (let j = 0; j < this.exportColumns.length; j++) {
+					const column = this.exportColumns[j];
 					table += '<td>';
-					table += this.collect(row, column.field);
+
+					const fieldValue = this.collect(row, column.field)
+					table += typeof fieldValue === 'string' ? fieldValue : JSON.stringify(fieldValue)
+					
 					table += '</td>';
 				}
 				table += '</tr>';
@@ -521,6 +495,21 @@ export default {
 	},
 
 	computed: {
+		exportColumns() {
+			if (this.exportType === 'columns') return this.columns
+
+			else if (this.exportType === 'full') {
+				const row = this.rows[0]
+				if (!row) return []
+
+				return Object.keys(row).map(property => {
+					return { label: property, field: property }
+				})
+			}
+
+			return []
+		},
+
 		perPageOptions() {
 			let options = (Array.isArray(this.perPage) && this.perPage) || [10, 20, 30, 40, 50];
 
