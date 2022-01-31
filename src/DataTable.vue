@@ -123,11 +123,11 @@
 			</div>
 			<div :class="{'datatable-info': true, 'rtl': lang.__is_rtl}">
 				<span>
-					{{ (currentPage - 1) * currentPerPage ? (currentPage - 1) * currentPerPage : 1 }}
-					-{{ Math.min(processedRows.length, currentPerPage * currentPage) }}
+					{{ (mCurrentPage - 1) * currentPerPage ? (mCurrentPage - 1) * currentPerPage : 1 }}
+					-{{ Math.min(mTotal, currentPerPage * mCurrentPage) }}
 				</span>
 				<span>{{ lang['out_of_pages'] }}</span>
-				<span>{{ processedRows.length }}</span>
+				<span>{{ mTotal }}</span>
 			</div>
 			<div>
 				<ul class="material-pagination">
@@ -170,6 +170,13 @@ export default {
 	},
 
 	props: {
+		currentPage: {
+			default: 1,
+			type: Number,
+		},
+		total: {
+			type: Number
+		},
 		title: {
 			type: String,
 			required: true,
@@ -201,6 +208,12 @@ export default {
 		},
 
 		perPage: {
+			default: 10,
+			required: false,
+			type: [String, Number],
+		},
+
+		perPages: {
 			type: Array,
 			required: false,
 			default: () => [10, 20, 30, 40, 50],
@@ -281,7 +294,7 @@ export default {
 	},
 
 	data: () => ({
-		currentPage: 1,
+		mCurrentPage: 1,
 		currentPerPage: 10,
 		sortColumn: -1,
 		sortType: 'asc',
@@ -289,15 +302,19 @@ export default {
 		searchInput: '',
 	}),
 
+	created() {
+		this.mCurrentPage = this.currentPage
+	},
+
 	methods: {
 		nextPage() {
-			if (this.processedRows.length > this.currentPerPage * this.currentPage)
-				++this.currentPage;
+			if (this.mTotal > this.currentPerPage * this.mCurrentPage)
+				++this.mCurrentPage;
 		},
 
 		previousPage() {
-			if (this.currentPage > 1)
-				--this.currentPage;
+			if (this.mCurrentPage > 1)
+				--this.mCurrentPage;
 		},
 
 		onTableLength(e) {
@@ -397,7 +414,7 @@ export default {
 
 					const fieldValue = this.collect(row, column.field)
 					table += typeof fieldValue === 'string' ? fieldValue : JSON.stringify(fieldValue)
-					
+
 					table += '</td>';
 				}
 				table += '</tr>';
@@ -488,13 +505,17 @@ export default {
 		},
 
 		rows(newRows, oldRows) {
-			// If the number of rows change, reset the currentPage to 1
+			// If the number of rows change, reset the mCurrentPage to 1
 			if (newRows !== oldRows)
-				this.currentPage = 1;
+				this.mCurrentPage = 1;
 		},
 	},
 
 	computed: {
+		mTotal() {
+			return this.total || this.processedRows.length
+		},
+
 		exportColumns() {
 			if (this.exportType === 'columns') return this.columns
 
@@ -511,7 +532,7 @@ export default {
 		},
 
 		perPageOptions() {
-			let options = (Array.isArray(this.perPage) && this.perPage) || [10, 20, 30, 40, 50];
+			let options = (Array.isArray(this.perPages) && this.perPages) || [10, 20, 30, 40, 50];
 
 			// Force numbers
 			options = options.map(v => parseInt(v));
@@ -580,8 +601,8 @@ export default {
 
 			if (this.paginate && this.currentPerPage !== -1)
 				paginatedRows = paginatedRows.slice(
-					(this.currentPage - 1) * this.currentPerPage,
-					this.currentPerPage === -1 ? paginatedRows.length + 1 : this.currentPage * this.currentPerPage
+					(this.mCurrentPage - 1) * this.currentPerPage,
+					this.currentPerPage === -1 ? paginatedRows.length + 1 : this.mCurrentPage * this.currentPerPage
 				);
 
 			return paginatedRows;
